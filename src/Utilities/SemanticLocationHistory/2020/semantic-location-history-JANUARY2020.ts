@@ -21,33 +21,15 @@ export interface ActivitySegment {
     endLocation:   Location;
     duration:      Duration;
     distance:      number;
-    activityType:  ActivityType;
+    activityType:  string;
     confidence:    Confidence;
     activities:    Activity[];
     waypointPath?: WaypointPath;
 }
 
 export interface Activity {
-    activityType: ActivityType;
+    activityType: string;
     probability:  number;
-}
-
-export enum ActivityType {
-    Cycling = "CYCLING",
-    Flying = "FLYING",
-    InBus = "IN_BUS",
-    InFerry = "IN_FERRY",
-    InPassengerVehicle = "IN_PASSENGER_VEHICLE",
-    InSubway = "IN_SUBWAY",
-    InTrain = "IN_TRAIN",
-    InTram = "IN_TRAM",
-    InVehicle = "IN_VEHICLE",
-    Motorcycling = "MOTORCYCLING",
-    Running = "RUNNING",
-    Sailing = "SAILING",
-    Skiing = "SKIING",
-    Still = "STILL",
-    Walking = "WALKING",
 }
 
 export enum Confidence {
@@ -252,13 +234,13 @@ const typeMap: any = {
         { json: "endLocation", js: "endLocation", typ: r("Location") },
         { json: "duration", js: "duration", typ: r("Duration") },
         { json: "distance", js: "distance", typ: 0 },
-        { json: "activityType", js: "activityType", typ: r("ActivityType") },
+        { json: "activityType", js: "activityType", typ: "" },
         { json: "confidence", js: "confidence", typ: r("Confidence") },
         { json: "activities", js: "activities", typ: a(r("Activity")) },
         { json: "waypointPath", js: "waypointPath", typ: u(undefined, r("WaypointPath")) },
     ], false),
     "Activity": o([
-        { json: "activityType", js: "activityType", typ: r("ActivityType") },
+        { json: "activityType", js: "activityType", typ: "" },
         { json: "probability", js: "probability", typ: 3.14 },
     ], false),
     "Duration": o([
@@ -291,23 +273,6 @@ const typeMap: any = {
     "SourceInfo": o([
         { json: "deviceTag", js: "deviceTag", typ: 0 },
     ], false),
-    "ActivityType": [
-        "CYCLING",
-        "FLYING",
-        "IN_BUS",
-        "IN_FERRY",
-        "IN_PASSENGER_VEHICLE",
-        "IN_SUBWAY",
-        "IN_TRAIN",
-        "IN_TRAM",
-        "IN_VEHICLE",
-        "MOTORCYCLING",
-        "RUNNING",
-        "SAILING",
-        "SKIING",
-        "STILL",
-        "WALKING",
-    ],
     "Confidence": [
         "HIGH",
         "LOW",
