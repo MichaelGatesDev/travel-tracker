@@ -104,7 +104,7 @@ function transform(val: any, typ: any, getProps: any): any {
         return val.map(el => transform(el, typ, getProps));
     }
 
-    function transformDate(typ: any, val: any): any {
+    function transformDate(val: any): any {
         if (val === null) {
             return null;
         }
@@ -150,7 +150,7 @@ function transform(val: any, typ: any, getProps: any): any {
             : invalidValue(typ, val);
     }
     // Numbers can be parsed by Date but shouldn't be.
-    if (typ === Date && typeof val !== "number") return transformDate(typ, val);
+    if (typ === Date && typeof val !== "number") return transformDate(val);
     return transformPrimitive(typ, val);
 }
 
@@ -166,17 +166,11 @@ function a(typ: any) {
     return { arrayItems: typ };
 }
 
-function u(...typs: any[]) {
-    return { unionMembers: typs };
-}
 
 function o(props: any[], additional: any) {
     return { props, additional };
 }
 
-function m(additional: any) {
-    return { props: [], additional };
-}
 
 function r(name: string) {
     return { ref: name };
