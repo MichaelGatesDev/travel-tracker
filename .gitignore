@@ -3,6 +3,8 @@
 *.kml
 *.json
 
+!/docs/**/*
+
 # dependencies
 /node_modules
 /.pnp
