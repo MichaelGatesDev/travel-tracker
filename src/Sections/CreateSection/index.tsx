@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Button } from "@material-ui/core";
+import { Button, Box, Grid, Paper } from "@material-ui/core";
 
 import "leaflet/dist/leaflet.css";
 import "leaflet/dist/leaflet";
@@ -29,6 +29,9 @@ export const CreateSection: React.FC = () => {
 
   const [semanticFiles, setSemanticFiles] = useState<FileList | null>(null);
   const [semantics, setSemantics] = useState<any[]>([]);
+
+  const [historyFiles, setHistoryFiles] = useState<FileList | null>(null);
+  const [histories, setHistories] = useState<any[]>([]);
 
   useEffect(() => {
   }, []);
@@ -90,8 +93,8 @@ export const CreateSection: React.FC = () => {
         const startLoc = activitySegment.startLocation;
         const endLoc = activitySegment.endLocation;
         if (startLoc === undefined || endLoc === undefined) continue;
-        if(startLoc.latitudeE7 === undefined || startLoc.longitudeE7 === undefined) continue;
-        if(endLoc.latitudeE7 === undefined || endLoc.longitudeE7 === undefined) continue;
+        if (startLoc.latitudeE7 === undefined || startLoc.longitudeE7 === undefined) continue;
+        if (endLoc.latitudeE7 === undefined || endLoc.longitudeE7 === undefined) continue;
         const startLat = startLoc.latitudeE7 / 10000000.0;
         const startLong = startLoc.longitudeE7 / 10000000.0;
         const endLat = endLoc.latitudeE7 / 10000000.0;
@@ -150,20 +153,33 @@ export const CreateSection: React.FC = () => {
   return (
     <section>
 
-      <div style={{ marginBottom: 10 }}>
-        <Button variant="contained" component="label">
-          <span>Select File</span>
-          <input type="file" multiple accept=".json" style={{ display: "none" }} onChange={(event) => {
-            const files = event.currentTarget.files;
-            if (files === null || files.length < 1) return;
-            setSemanticFiles(files);
-          }} />
-        </Button>
-
-        <Button variant="contained" component="label" onClick={parse}>
-          <span>Parse</span>
-        </Button>
-      </div>
+      <Grid container spacing={0}>
+        <Grid item>
+          <Button variant="contained" component="label">
+            <span>Select Semantic Files</span>
+            <input type="file" multiple accept=".json" style={{ display: "none" }} onChange={(event) => {
+              const files = event.currentTarget.files;
+              if (files === null || files.length < 1) return;
+              setSemanticFiles(files);
+            }} />
+          </Button>
+        </Grid>
+        <Grid item>
+          <Button variant="contained" component="label">
+            <span>Select History Files</span>
+            <input type="file" multiple accept=".json" style={{ display: "none" }} onChange={(event) => {
+              const files = event.currentTarget.files;
+              if (files === null || files.length < 1) return;
+              setHistoryFiles(files);
+            }} />
+          </Button>
+        </Grid>
+        <Grid item>
+          <Button variant="contained" component="label" onClick={parse}>
+            <span>Parse</span>
+          </Button>
+        </Grid>
+      </Grid>
 
       <div>
         <Map center={{ lat: 0, lng: 0 }} zoom={3} style={{ height: '800px', width: '100%' }}>
