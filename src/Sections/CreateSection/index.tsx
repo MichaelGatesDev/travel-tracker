@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Button } from "@material-ui/core";
 
 import "leaflet/dist/leaflet.css";
@@ -27,15 +27,29 @@ Leaflet.Marker.prototype.options.icon = DefaultIcon;
 
 export const CreateSection: React.FC = () => {
 
-  const [file, setFile] = useState<File | null>(null);
+  const [semanticFiles, setSemanticFiles] = useState<FileList | null>(null);
+  const [semantics, setSemantics] = useState<any[]>([]);
 
-  const [semanticHistory, setSemanticHistory] = useState<any | undefined>(undefined);
+  useEffect(() => {
+  }, []);
 
-  const parse = async () => {
-    if (file === undefined || file === null) {
-      console.error("You must select a file first.");
+  const parse = async (): Promise<void> => {
+    if (semanticFiles === undefined || semanticFiles === null || semanticFiles.length <= 0) {
+      console.error("You must select files first.");
       return;
-    };
+    }
+
+    setSemantics([]);
+    let newSemantics = [];
+    for (let i = 0; i < semanticFiles.length; i++) {
+      const file = semanticFiles[i];
+      const semantic = await loadSemantic(file);
+      newSemantics.push(semantic);
+    }
+    setSemantics(newSemantics);
+  };
+
+  const loadSemantic = async (file: File): Promise<any> => {
     console.log(`Loading ${file.name}...`);
     const textContent: string = await fetch(URL.createObjectURL(file)).then(response => response.text());
 
@@ -58,51 +72,91 @@ export const CreateSection: React.FC = () => {
       return;
     }
 
-    console.log(`${testMonth} ${testYear}`);
-
     const specialName = `${testDate.toLocaleString('default', { month: 'long' })}${testYear}`.toUpperCase();
-    import(`../../Utilities/SemanticLocationHistory/${testYear}/semantic-location-history-${specialName}`).then((test: any) => {
-      const converted = test.Convert[`toSemanticLocationHistory${specialName}`](textContent);
-      setSemanticHistory(converted);
-    });
-  }
+    const dynamicImport = await import(`../../Utilities/SemanticLocationHistory/${testYear}/semantic-location-history-${specialName}`);
+    const converted = dynamicImport.Convert[`toSemanticLocationHistory${specialName}`](textContent);
 
+    console.log(`Loaded ${file.name}!`);
+    return converted;
+  };
 
-  const visits = [];
-
-  if (semanticHistory !== undefined) {
-    const timelineObjects = semanticHistory.timelineObjects;
-    for (const to of timelineObjects) {
-      const visit = to.placeVisit;
-      if (visit !== undefined) {
-        console.log(visit);
-        const lat = visit.centerLatE7;
-        const long = visit.centerLngE7;
-        const loc = visit.location;
-        visits.push(
-          <CircleMarker radius={3} center={{ lat: lat / 10000000.0, lng: long / 10000000.0 }} >
+  const createActivityDisplays = () => {
+    let results = [];
+    for (const semantic of semantics) {
+      const objects = semantic.timelineObjects;
+      for (const obj of objects) {
+        const activitySegment = obj.activitySegment;
+        if (activitySegment === undefined) continue;
+        const startLoc = activitySegment.startLocation;
+        const endLoc = activitySegment.endLocation;
+        if (startLoc === undefined || endLoc === undefined) continue;
+        if(startLoc.latitudeE7 === undefined || startLoc.longitudeE7 === undefined) continue;
+        if(endLoc.latitudeE7 === undefined || endLoc.longitudeE7 === undefined) continue;
+        const startLat = startLoc.latitudeE7 / 10000000.0;
+        const startLong = startLoc.longitudeE7 / 10000000.0;
+        const endLat = endLoc.latitudeE7 / 10000000.0;
+        const endLong = endLoc.longitudeE7 / 10000000.0;
+        const confidence = activitySegment.confidence;
+        const activities = activitySegment.activities;
+        results.push(
+          <Polyline
+            positions={
+              [
+                { lat: startLat, lng: startLong },
+                { lat: endLat, lng: endLong },
+              ]
+            }
+          >
             <Popup>
-              <p>ID: {loc.placeId}</p>
-              <p>Name: {loc.name}</p>
-              <p>Address: {loc.address}</p>
+              <p>Activities: {activities.map((activity: any) => activity.activityType).join(", ")}</p>
+              <p>Confidence: {confidence}</p>
             </Popup>
-          </CircleMarker>
+          </Polyline>
         );
       }
     }
-  }
+    return results;
 
+    // let results = [];
+    // for (const semantic of semantics) {
+    //   const timelineObjects = semantic.timelineObjects;
+    //   for (const to of timelineObjects) {
+    //     const visit = to.placeVisit;
+    //     if (visit === undefined) continue;
+
+    //     const lat = visit.centerLatE7;
+    //     const long = visit.centerLngE7;
+    //     const loc = visit.location;
+    //     results.push(
+    //       <CircleMarker radius={3} center={{ lat: lat / 10000000.0, lng: long / 10000000.0 }} >
+    //         <Popup>
+    //           <p>ID: {loc.placeId}</p>
+    //           <p>Name: {loc.name}</p>
+    //           <p>Address: {loc.address}</p>
+    //         </Popup>
+    //       </CircleMarker>
+    //     );
+    //   }
+    // }
+    // return results;
+  };
+
+  let activities: JSX.Element[] = [];
+  if (semantics.length > 0) {
+    activities = createActivityDisplays();
+    console.log("creating activities");
+  }
 
   return (
     <section>
 
-      <div>
+      <div style={{ marginBottom: 10 }}>
         <Button variant="contained" component="label">
           <span>Select File</span>
-          <input type="file" style={{ display: "none" }} onChange={(event) => {
+          <input type="file" multiple accept=".json" style={{ display: "none" }} onChange={(event) => {
             const files = event.currentTarget.files;
             if (files === null || files.length < 1) return;
-            setFile(files[0]);
+            setSemanticFiles(files);
           }} />
         </Button>
 
@@ -112,12 +166,14 @@ export const CreateSection: React.FC = () => {
       </div>
 
       <div>
-        <Map center={{ lat: 0, lng: 0 }} zoom={2} style={{ height: '100vh', width: '100%' }}>
+        <Map center={{ lat: 0, lng: 0 }} zoom={3} style={{ height: '800px', width: '100%' }}>
           <TileLayer
             url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
             attribution="&copy; <a href=&quot;http://osm.org/copyright&quot;>OpenStreetMap</a> contributors"
           />
-          {visits}
+
+          {activities}
+
           {/* {semanticHistory !== undefined && (
             semanticHistory.timelineObjects.map((obj: any, idx: number) => {
               const segment = obj.activitySegment;
