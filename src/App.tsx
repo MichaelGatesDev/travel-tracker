@@ -9,8 +9,8 @@ const App: React.FC = () => {
     <div className="App">
       <HashRouter basename='/'>
         <Switch>
+          <Route exact path="/" component={HomeSection} />
           <Route exact path="/create" component={CreateSection} />
-          <Route path="/" component={HomeSection} />
         </Switch>
       </HashRouter>
     </div>

@@ -17,6 +17,7 @@ import {
 } from "react-leaflet";
 
 import { JSONHelper } from "../../Utilities/json-helper";
+import { NavigationBar } from "../../Components/NavigationBar";
 
 let DefaultIcon = Leaflet.icon({
   iconUrl: icon,
@@ -152,6 +153,8 @@ export const CreateSection: React.FC = () => {
 
   return (
     <section>
+
+      <NavigationBar />
 
       <Grid container spacing={0}>
         <Grid item>
